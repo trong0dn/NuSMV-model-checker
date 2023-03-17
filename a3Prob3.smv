@@ -1,0 +1,146 @@
+-- Assignment 3, Problem 3
+-- NuSMV implementation of reusable (cyclic) barrier using two turnstiles
+-- Note that the limitations of the SMV language do not allow the barrier code to be reused.
+-- Instead, the code is copy/pasted and only the program counter values are changed.
+MODULE proc(id, inC, outC, lock, N)
+VAR
+  pc : {w1,w2,w3,                             -- program counter labels for 'work' portion of code
+	b1c1,b1c2,b1c3,b1c4,b1c5,             -- pc label for barrier 1: collecting phase
+	b1r1,b1r2,b1r3,b1r4,b1r5,             -- pc label for barrier 1: releasing phase
+	b2c1,b2c2,b2c3,b2c4,b2c5,             -- pc label for barrier 2: collecting phase
+	b2r1,b2r2,b2r3,b2r4,b2r5,             -- pc label for barrier 2: releasing phase
+	b3c1,b3c2,b3c3,b3c4,b3c5,             -- pc label for barrier 3: collecting phase
+	b3r1,b3r2,b3r3,b3r4,b3r5};            -- pc label for barrier 3: releasing phase
+ASSIGN
+  init(pc) := w1;
+  next(pc) := case
+		pc=w1 : {b1c1};               -- in work 1
+		                              -- barrier 1: collecting
+		pc=b1c1 & locked : b1c1;         -- lock taken; wait
+		pc=b1c1 & !locked : b1c2;        -- lock not taken: get lock, execute arrival
+		pc=b1c2 : b1c3;                  -- inC++
+		pc=b1c3 & inC=N : b1c4;          -- last process to arrive
+		pc=b1c3 & !(inC=N) : b1c5;       -- not last process to arrive
+		pc=b1c4 : b1r1;                  -- outC:=N; unlock; advance to release
+                pc=b1c5 & inC<N : b1c5;          -- not all arrived; wait (unlock, if locked)
+		pc=b1c5 & !(inC<N) : b1r1;       -- all arrived; advance to release
+					      -- barrier 1: releasing
+		-- Part a: your code for the releasing phase of barrier 1 here
+		                              -- barrier 1: end
+		  
+		pc=w2 : {b2c1};               -- in work 2
+		
+					      -- barrier 2: collecting
+		pc=b2c1 & locked : b2c1;         -- lock taken; wait
+		pc=b2c1 & !locked : b2c2;        -- lock not taken: get lock, execute arrival
+		pc=b2c2 : b2c3;                  -- inC++
+		pc=b2c3 & inC=N : b2c4;          -- last process to arrive
+		pc=b2c3 & !(inC=N) : b2c5;       -- not last process to arrive
+		pc=b2c4 : b2r1;                  -- outC:=N; unlock; advance to release
+                pc=b2c5 & inC<N : b2c5;          -- not all arrived; wait (unlock, if locked)
+		pc=b2c5 & !(inC<N) : b2r1;    -- all arrived; advance to release
+					      -- barrier 2: releasing
+		-- Part a: your code for the releasing phase of barrier 2 here
+		                              -- barrier 2: end
+		
+		pc=w3 : {b3c1};               -- in work 3
+		
+					      -- barrier 3: collecting
+		pc=b3c1 & locked : b3c1;         -- lock taken; wait
+		pc=b3c1 & !locked : b3c2;        -- lock not taken: get lock, execute arrival
+		pc=b3c2 : b3c3;                  -- inC++
+		pc=b3c3 & inC=N : b3c4;          -- last process to arrive
+		pc=b3c3 & !(inC=N) : b3c5;       -- not last process to arrive
+		pc=b3c4 : b3r1;                  -- outC:=N; unlock; advance to release
+                pc=b3c5 & inC<N : b3c5;          -- not all arrived; wait (unlock, if locked)
+		pc=b3c5 & !(inC<N) : b3r1;       -- all arrived; advance to release
+					      -- barrier 3: releasing
+		-- Part a: your code for the releasing phase of barrier 3 here
+		                              -- barrier 3: end
+		TRUE : pc;
+	       esac;
+  next(inC) := case
+		 (pc=b1c2 | pc=b2c2 | pc=b3c2) & inC<N : inC+1;
+		 -- Part a: update here as appropriate
+		 TRUE : inC;
+	       esac;
+  next(outC) := case
+		  pc=b1c4 | pc=b2c4 | pc=b3c4 : N;
+		 -- Part a: update here as appropriate
+		  TRUE : outC;
+	       esac;
+  next(lock) := case
+		    (pc=b1c1 | pc=b2c1 | pc=b3c1) & !locked : id;  -- get lock
+		    pc=b1c4 | pc=b2c4 | pc=b3c4 : 0;
+		    (pc=b1c5 | pc=b2c5 | pc=b3c5) & iHoldLock : 0;
+		 -- Part a: update here as appropriate		    
+		    TRUE : lock;
+		esac;
+DEFINE
+  iHoldLock := lock=id;  -- this process holds lock
+  locked := lock>0 & !iHoldLock; -- some other process holds lock
+FAIRNESS
+  running  -- make sure that process always executes eventually
+
+MODULE main
+VAR
+  p1 : process proc(1, inC, outC, lock, N);
+  p2 : process proc(2, inC, outC, lock, N);
+--  p3 : process proc(3, inC, outC, lock, N);
+  inC : 0..numProcs;
+  outC : 0..numProcs;
+  lock : 0..numProcs;
+  FROZENVAR N : 0..numProcs;
+ASSIGN
+  init(inC) := 0;
+  init(outC) := 0;
+  init(lock) := 0;
+  init(N) := numProcs;
+DEFINE
+  numProcs := 2;
+
+-- Part b. complete and uncomment ------------------------------
+-- add your CTL formulas P1 through P6 from Problem  2 here, make modifications as necessary and rerun analyses
+
+-- SPEC NAME P1 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P2 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P3 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P4 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P5 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P6 := <your answer here>
+-- <holds or not?>
+
+-- Part c-h : complete and uncomment ------------------------------
+-- SPEC NAME Pc := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME Pd := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME Pe := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME Pf := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME Pg := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME Ph := <your answer here>
+-- <holds or not?>
+
+-- Part i -----------------------------------------------------
+  
+-- Brief description of your technique 
+-- SPEC NAME Pi := <longest formula used in technique here (assuming 2 processes)>
+

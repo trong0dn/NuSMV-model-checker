@@ -1,0 +1,87 @@
+-- Assignment 3, Problem 2, Part b,c, and d 
+-- NuSMV implementation of non-reusable barrier
+
+MODULE proc(id, inC, lock, N)
+VAR
+  pc : {w1,w2,                              -- program counter labels for work portion of code
+	bc1,bc2,bc3,bc4,bc5};               -- program counter labels for barrier portion of code
+ASSIGN
+  init(pc) := w1;
+  next(pc) := case
+		pc=w1 : {bc1};              -- in work 1
+		                            -- barrier start
+		pc=bc1 & locked : bc1;         -- lock taken; block
+		pc=bc1 & !locked : bc2;        -- lock not taken: get lock, execute collect
+		pc=bc2 : bc3;                  -- inC++
+		pc=bc3 & inC=N : bc4;          -- last process to arrive
+		pc=bc3 & !(inC=N) : bc5;       -- not last process to arrive
+		pc=bc4 : w2;                   -- release lock; leave barrier and advance to work
+                pc=bc5 & inC<N : bc5;          -- not all arrived; wait (release lock, if necessary)
+		pc=bc5 & !(inC<N) : w2;        -- all arrived; advance to work
+		                            -- barrier end		
+		pc=w2 : w2;                 -- in work 2
+		TRUE : pc;
+	       esac;
+  next(inC) := case
+		 (pc=bc2) & inC<N : inC+1;
+		 TRUE : inC;
+	       esac;
+  next(lock) := case
+		  (pc=bc1) & !locked : id;   -- get lock
+		  pc=bc4 : 0;                -- release lock
+		  (pc=bc5) & iHoldLock : 0;  -- release lock
+		  TRUE : lock;
+		esac;
+DEFINE
+  iHoldLock := lock=id;  -- this process holds lock
+  locked := lock>0 & !iHoldLock; -- some other process holds lock
+FAIRNESS
+  running  -- make sure that process always executes eventually
+
+MODULE main
+VAR
+  p1 : process proc(1, inC, lock, N);
+  p2 : process proc(2, inC, lock, N);
+--  p3 : process proc(3, inC, lock, N);  -- uncomment for 3 processes 
+  inC : 0..numProcs;
+  lock : 0..numProcs;
+  FROZENVAR N : 0..numProcs;  -- 'FROZENVAR's cannot be changed
+ASSIGN
+  init(inC) := 0;
+  init(lock) := 0;
+  init(N) := numProcs;
+DEFINE
+  numProcs := 2;  -- change to 'numProcs := 3' for 3 processes
+
+-- Part b: complete and uncomment -----------------------------
+-- allInW1 := <your answer here>;
+-- atLeastOneInW1 := <your answer here>;
+-- p1InB := <your answer here>;
+
+-- SPEC NAME P1 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P2 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P3 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P4 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P5 := <your answer here>
+-- <holds or not?>
+
+-- SPEC NAME P6 := <your answer here>
+-- <holds or not?>
+
+
+
+-- Part c: complete -------------------------------------------
+-- Which properties does the original Java code violate?
+-- <your answer here>
+
+-- Part d: complete -------------------------------------------
+-- Which properties does the modified Java code violate?
+-- <your answer here>
