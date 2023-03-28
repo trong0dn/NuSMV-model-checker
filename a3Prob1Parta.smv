@@ -1,2 +1,47 @@
 -- Assignment 3, Problem 1, Part a
--- Add your solution below
+MODULE main --a3Prob1Parta.smv
+    VAR
+        state : {s0, s1, s2, s3};
+        p : boolean;
+        q : boolean;
+        r : boolean;
+    ASSIGN
+        init(state) := s0;
+        next(state) := 
+            case
+                state = s0 : {s1, s2};
+                state = s1 : {s0};
+                state = s2 : {s1, s3};
+                state = s3 : {s3};
+                TRUE : state;
+            esac;
+        p := 
+            case
+                state = s0 : TRUE;
+                state = s1 : TRUE;
+                state = s2 : FALSE;
+                state = s3 : FALSE;
+            esac;
+        q := 
+            case
+                state = s0 : FALSE;
+                state = s1 : TRUE;
+                state = s2 : TRUE;
+                state = s3 : FALSE;
+            esac;
+        r := 
+            case
+                state = s0 : FALSE;
+                state = s1 : FALSE;
+                state = s2 : TRUE;
+                state = s3 : TRUE;
+            esac;
+
+    CTLSPEC
+        EG p;
+    CTLSPEC
+        AG (q -> AF p);
+    CTLSPEC
+        EF (AG r);
+    CTLSPEC
+        A [(p | q) U r]
