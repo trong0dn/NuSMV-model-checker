@@ -7,34 +7,39 @@ MODULE main --a3Prob1Parta.smv
         r : boolean;
     ASSIGN
         init(state) := s0;
+        init(p) := TRUE;
+        init(q) := FALSE;
+        init(r) := FALSE;
         next(state) := 
             case
                 state = s0 : {s1, s2};
                 state = s1 : {s0};
                 state = s2 : {s1, s3};
                 state = s3 : {s3};
-                TRUE : state;
             esac;
-        p := 
+        next(p) := 
             case
-                state = s0 : TRUE;
-                state = s1 : TRUE;
-                state = s2 : FALSE;
-                state = s3 : FALSE;
+                next(state) = s0 : TRUE;
+                next(state) = s1 : TRUE;
+                next(state) = s2 : FALSE;
+                next(state) = s3 : FALSE;
+                TRUE : FALSE;
             esac;
-        q := 
+        next(q) := 
             case
-                state = s0 : FALSE;
-                state = s1 : TRUE;
-                state = s2 : TRUE;
-                state = s3 : FALSE;
+                next(state) = s0 : FALSE;
+                next(state) = s1 : TRUE;
+                next(state) = s2 : TRUE;
+                next(state) = s3 : FALSE;
+                TRUE : FALSE;
             esac;
-        r := 
+        next(r) := 
             case
-                state = s0 : FALSE;
-                state = s1 : FALSE;
-                state = s2 : TRUE;
-                state = s3 : TRUE;
+                next(state) = s0 : FALSE;
+                next(state) = s1 : FALSE;
+                next(state) = s2 : TRUE;
+                next(state) = s3 : TRUE;
+                TRUE : FALSE;
             esac;
 
     CTLSPEC
