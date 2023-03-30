@@ -44,7 +44,7 @@ class BarrierProb2Partcandd {
 			inC++;
 			if (inC==N) {
 				assert (inC==N);
-//				inC=0;  // uncomment for Problem 2 Part d
+				inC=0;  // uncomment for Problem 2 Part d
 				System.out.println("=== all arrived =======================");	
 				notifyAll();
 			}	

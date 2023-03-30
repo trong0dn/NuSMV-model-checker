@@ -95,8 +95,9 @@ SPEC NAME P6 := AG (EF (p1.pc=w2 & p2.pc=w2));
 
 -- Part c: complete -------------------------------------------
 -- Which properties does the original Java code violate?
--- <your answer here>
+-- specification P6 := AG (EF (p1.pc = w2 & p2.pc = w2))  is false
 
 -- Part d: complete -------------------------------------------
 -- Which properties does the modified Java code violate?
--- <your answer here>
+-- specification P4 := EF !(p1InB & p2InB)  is false
+-- specification P5 := AG (p1InB -> AF p1.pc = w2)  is false
