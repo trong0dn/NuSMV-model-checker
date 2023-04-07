@@ -92,7 +92,6 @@ SPEC NAME P6 := AG (EF ((p1.pc=w2 -> AG p1.pc=w2) & (p2.pc=w2 -> AG p2.pc=w2) & 
 -- <holds or not?>
 -- specification AG (EF (((p1.pc = w2 -> AG p1.pc = w2) & (p2.pc = w2 -> AG p2.pc = w2)) & (p3.pc = w2 -> AG p3.pc = w2)))  is true
 
-
 -- Part c: complete -------------------------------------------
 -- Which properties does the original Java code violate?
 -- specification P6 := AG (EF (p1.pc = w2 & p2.pc = w2))  is false
