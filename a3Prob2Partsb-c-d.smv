@@ -72,9 +72,9 @@ SPEC NAME P2 := AG !(atLeastOneInW1 & atLeastOneInW2);
 -- specification AG !(atLeastOneInW1 & atLeastOneInW2)  is true
 
 -- 'Along all paths, it is always the case that when process p1 is in w2, then process p2 is either in the barrier or also in w2'
-SPEC NAME P3 := AG (p1.pc=w2 -> (p2InB | p2.pc=w2));
+SPEC NAME P3 := AG p1.pc=w2 -> AG (p2InB | p2.pc=w2);
 -- <holds or not?>
--- specification AG (p1.pc = w2 -> (p2InB | p2.pc = w2))  is true
+-- specification (AG p1.pc = w2 -> AG (p2InB | p2.pc = w2))  is true
 
 -- 'It is impossible for both processes to get stuck in the barrier forever', 
 -- i.e., 'There is no path along which there exists a state from which there is a path along which processes p1 and p2 are both in the barrier forever'
@@ -88,9 +88,9 @@ SPEC NAME P5 := AG (p1InB -> AF p1.pc=w2);
 -- specification AG (p1InB -> AF p1.pc = w2)  is true
 
 -- 'Along all paths, all processes eventually are in work region w2 and then always stay there forever'
-SPEC NAME P6 := AG (EF (p1.pc=w2 & p2.pc=w2));
+SPEC NAME P6 := AG (EF ((p1.pc=w2 -> AG p1.pc=w2) & (p2.pc=w2 -> AG p2.pc=w2) & (p3.pc=w2 -> AG p3.pc=w2)));
 -- <holds or not?>
--- specification AG (EF (p1.pc = w2 & p2.pc = w2))  is true
+-- specification AG (EF (((p1.pc = w2 -> AG p1.pc = w2) & (p2.pc = w2 -> AG p2.pc = w2)) & (p3.pc = w2 -> AG p3.pc = w2)))  is true
 
 
 -- Part c: complete -------------------------------------------

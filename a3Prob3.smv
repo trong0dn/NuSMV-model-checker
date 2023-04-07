@@ -15,65 +15,95 @@ ASSIGN
   init(pc) := w1;
   next(pc) := case
 		pc=w1 : {b1c1};               -- in work 1
-		                              -- barrier 1: collecting
+		                    -- barrier 1: collecting
 		pc=b1c1 & locked : b1c1;         -- lock taken; wait
 		pc=b1c1 & !locked : b1c2;        -- lock not taken: get lock, execute arrival
 		pc=b1c2 : b1c3;                  -- inC++
 		pc=b1c3 & inC=N : b1c4;          -- last process to arrive
 		pc=b1c3 & !(inC=N) : b1c5;       -- not last process to arrive
 		pc=b1c4 : b1r1;                  -- outC:=N; unlock; advance to release
-                pc=b1c5 & inC<N : b1c5;          -- not all arrived; wait (unlock, if locked)
+        pc=b1c5 & inC<N : b1c5;          -- not all arrived; wait (unlock, if locked)
 		pc=b1c5 & !(inC<N) : b1r1;       -- all arrived; advance to release
-					      -- barrier 1: releasing
+
+					      	-- barrier 1: releasing
 		-- Part a: your code for the releasing phase of barrier 1 here
-		                              -- barrier 1: end
+		pc=b1r1 & locked : b1r1;         -- lock taken; wait
+		pc=b1r1 & !locked : b1r2;        -- lock not taken: get lock, execute arrival
+		pc=b1r2 : b1r3;                  -- outC--
+		pc=b1r3 & outC=0 : b1r4;         -- last process to arrive
+		pc=b1r3 & !(outC=0) : b1r5;      -- not last process to arrive
+		pc=b1r4 : w2;                  -- outC:=0; unlock; advance to collect
+        pc=b1r5 & outC>0 : b1r5;         -- not all arrived; wait (unlock, if locked)
+		pc=b1r5 & !(outC>0) : w2;      -- all arrived; advance to collect
+		                    -- barrier 1: end
 		  
 		pc=w2 : {b2c1};               -- in work 2
-		
-					      -- barrier 2: collecting
+					      	-- barrier 2: collecting
 		pc=b2c1 & locked : b2c1;         -- lock taken; wait
 		pc=b2c1 & !locked : b2c2;        -- lock not taken: get lock, execute arrival
 		pc=b2c2 : b2c3;                  -- inC++
 		pc=b2c3 & inC=N : b2c4;          -- last process to arrive
 		pc=b2c3 & !(inC=N) : b2c5;       -- not last process to arrive
 		pc=b2c4 : b2r1;                  -- outC:=N; unlock; advance to release
-                pc=b2c5 & inC<N : b2c5;          -- not all arrived; wait (unlock, if locked)
+        pc=b2c5 & inC<N : b2c5;          -- not all arrived; wait (unlock, if locked)
 		pc=b2c5 & !(inC<N) : b2r1;    -- all arrived; advance to release
-					      -- barrier 2: releasing
+
+					     	-- barrier 2: releasing
 		-- Part a: your code for the releasing phase of barrier 2 here
-		                              -- barrier 2: end
+		pc=b2r1 & locked : b2r1;         -- lock taken; wait
+		pc=b2r1 & !locked : b2r2;        -- lock not taken: get lock, execute arrival
+		pc=b2r2 : b2r3;                  -- outC--
+		pc=b2r3 & outC=0 : b2r4;         -- last process to arrive
+		pc=b2r3 & !(outC=0) : b2r5;       -- not last process to arrive
+		pc=b2r4 : w3;                  -- outC:=0; unlock; advance to collect
+        pc=b2r5 & outC>0 : b2r5;         -- not all arrived; wait (unlock, if locked)
+		pc=b2r5 & !(outC>0) : w3;      -- all arrived; advance to collect
+		                    -- barrier 2: end
 		
 		pc=w3 : {b3c1};               -- in work 3
-		
-					      -- barrier 3: collecting
+					      	-- barrier 3: collecting
 		pc=b3c1 & locked : b3c1;         -- lock taken; wait
 		pc=b3c1 & !locked : b3c2;        -- lock not taken: get lock, execute arrival
 		pc=b3c2 : b3c3;                  -- inC++
 		pc=b3c3 & inC=N : b3c4;          -- last process to arrive
 		pc=b3c3 & !(inC=N) : b3c5;       -- not last process to arrive
 		pc=b3c4 : b3r1;                  -- outC:=N; unlock; advance to release
-                pc=b3c5 & inC<N : b3c5;          -- not all arrived; wait (unlock, if locked)
+        pc=b3c5 & inC<N : b3c5;          -- not all arrived; wait (unlock, if locked)
 		pc=b3c5 & !(inC<N) : b3r1;       -- all arrived; advance to release
-					      -- barrier 3: releasing
+
+					    	-- barrier 3: releasing
 		-- Part a: your code for the releasing phase of barrier 3 here
-		                              -- barrier 3: end
+		pc=b3r1 & locked : b3r1;         -- lock taken; wait
+		pc=b3r1 & !locked : b3r2;        -- lock not taken: get lock, execute arrival
+		pc=b3r2 : b3r3;                  -- outC--
+		pc=b3r3 & outC=0 : b3r4;         -- last process to arrive
+		pc=b3r3 & !(outC=0) : b3r5;      -- not last process to arrive
+		pc=b3r4 : w1;                  -- outC:=0; unlock; advance to collect
+        pc=b3r5 & outC>0 : b3r5;         -- not all arrived; wait (unlock, if locked)
+		pc=b3r5 & !(outC>0) : w1;      -- all arrived; advance to collect
+		                    -- barrier 3: end
 		TRUE : pc;
 	       esac;
   next(inC) := case
 		 (pc=b1c2 | pc=b2c2 | pc=b3c2) & inC<N : inC+1;
 		 -- Part a: update here as appropriate
+		 pc=b1r4 | pc=b2r4 | pc=b3r4 : 0;
 		 TRUE : inC;
 	       esac;
   next(outC) := case
 		  pc=b1c4 | pc=b2c4 | pc=b3c4 : N;
 		 -- Part a: update here as appropriate
+		 (pc=b1r2 | pc=b2r2 | pc=b3r2) & outC>0 : outC+(-1);
 		  TRUE : outC;
 	       esac;
   next(lock) := case
 		    (pc=b1c1 | pc=b2c1 | pc=b3c1) & !locked : id;  -- get lock
 		    pc=b1c4 | pc=b2c4 | pc=b3c4 : 0;
 		    (pc=b1c5 | pc=b2c5 | pc=b3c5) & iHoldLock : 0;
-		 -- Part a: update here as appropriate		    
+		 -- Part a: update here as appropriate		
+		 	(pc=b1r1 | pc=b2r1 | pc=b3r1) & !locked : id;  -- get lock
+		    pc=b1r4 | pc=b2r4 | pc=b3r4 : 0;
+		    (pc=b1r5 | pc=b2r5 | pc=b3r5) & iHoldLock : 0;    
 		    TRUE : lock;
 		esac;
 DEFINE
@@ -86,7 +116,7 @@ MODULE main
 VAR
   p1 : process proc(1, inC, outC, lock, N);
   p2 : process proc(2, inC, outC, lock, N);
---  p3 : process proc(3, inC, outC, lock, N);
+  -- p3 : process proc(3, inC, outC, lock, N);
   inC : 0..numProcs;
   outC : 0..numProcs;
   lock : 0..numProcs;
@@ -101,46 +131,99 @@ DEFINE
 
 -- Part b. complete and uncomment ------------------------------
 -- add your CTL formulas P1 through P6 from Problem  2 here, make modifications as necessary and rerun analyses
+allInW1 := p1.pc=w1 & p2.pc=w1;
+allInW2 := p1.pc=w2 & p2.pc=w2;
+atLeastOneInW1 := p1.pc=w1 | p2.pc=w1;
+atLeastOneInW2 := p1.pc=w2 | p2.pc=w2;
+p1InB1 := p1.pc=b1c1 | p1.pc=b1c2 | p1.pc=b1c3 | p1.pc=b1c4 | p1.pc=b1c5;
+p2InB2 := p2.pc=b2c1 | p2.pc=b2c2 | p2.pc=b2c3 | p2.pc=b2c4 | p2.pc=b2c5;
+p1InB2 := p1.pc=b2c1 | p1.pc=b2c2 | p1.pc=b2c3 | p1.pc=b2c4 | p1.pc=b2c5;
+p2InB1 := p2.pc=b1c1 | p2.pc=b1c2 | p2.pc=b1c3 | p2.pc=b1c4 | p2.pc=b1c5;
 
--- SPEC NAME P1 := <your answer here>
+-- 'When the program starts, all processes are in work region w1'
+SPEC NAME P1 := EF allInW1;
 -- <holds or not?>
+-- specification EF allInW1  is true
 
--- SPEC NAME P2 := <your answer here>
--- <holds or not?>
+-- 'It is never the case that at least one process is in region w1 
+-- and at least one process is in region w2 at the same time'
+SPEC NAME P2 := AG !(atLeastOneInW1 & atLeastOneInW2);
+-- <holds or not?
+-- specification AG !(atLeastOneInW1 & atLeastOneInW2)  is true
 
--- SPEC NAME P3 := <your answer here>
+-- 'Along all paths, it is always the case that when process p1 is in w2, then process p2 is either in the barrier or also in w2'
+SPEC NAME P3 := AG p1.pc=w2 -> AG (p2InB2 | p2.pc=w2);
 -- <holds or not?>
+-- specification (AG p1.pc = w2 -> AG (p2InB2 | p2.pc = w2))  is true 
 
--- SPEC NAME P4 := <your answer here>
+-- 'It is impossible for both processes to get stuck in the barrier forever', 
+-- i.e., 'There is no path along which there exists a state from which there is a path along which processes p1, p2 and p3 are both in the barrier forever'
+SPEC NAME P4 := EF (!(p1InB1 & p2InB2));
 -- <holds or not?>
+-- specification EF !(p1InB1 & p2InB2)  is true
 
--- SPEC NAME P5 := <your answer here>
+-- 'Along all paths, whenever process p1 is in the barrier, it will always eventually be in work region w2'
+SPEC NAME P5 := AG (p1InB1 -> AF (p1.pc=w2));
 -- <holds or not?>
+-- specification AG (p1InB1 -> AF p1.pc = w2)  is true
 
--- SPEC NAME P6 := <your answer here>
+-- 'Along all paths, all processes eventually are in work region w2 and then always stay there forever'
+SPEC NAME P6 := AG (EF ((p1.pc=w2 -> AG p1.pc=w2) & (p2.pc=w2 -> AG p2.pc=w2)));
 -- <holds or not?>
+-- specification AG (EF ((p1.pc = w2 -> AG p1.pc = w2) & (p2.pc = w2 -> AG p2.pc = w2)))  is true
 
 -- Part c-h : complete and uncomment ------------------------------
--- SPEC NAME Pc := <your answer here>
+-- 'There exists a path along which, eventually, all processes will be in b2'
+SPEC NAME Pc := EF (AF (p1InB2 & p2InB2))
 -- <holds or not?>
+-- specification EF (AF (p1InB2 & p2InB2))  is true
 
--- SPEC NAME Pd := <your answer here>
+-- 'Along all paths, it is always the case that when all processes are in w1, 
+-- then there exists a path along which all processes are in w2 eventually'
+SPEC NAME Pd := AG ((p1.pc=w1 & p2.pc=w1) -> EF (p1.pc=w2 & p2.pc=w2))
 -- <holds or not?>
+-- -- specification AG ((p1.pc = w1 & p2.pc = w1) -> EF (p1.pc = w2 & p2.pc = w2))  is true
 
--- SPEC NAME Pe := <your answer here>
+-- 'Along all paths, it is always the case that whenever inC is equal to 1, 
+--- then along all paths inC will be equal to 2 eventually and inC will be equal to 1 until then', 
+-- i.e., “once variable inC is equal to 1, the next value that it will take on is 2”
+SPEC NAME Pe := AG (inC = 1 -> EF inC = 2)
 -- <holds or not?>
+-- specification AG (inC = 1 -> EF inC = 2)  is true
 
--- SPEC NAME Pf := <your answer here>
+-- 'Along all paths, process p1 is in w1 infinitely often'
+SPEC NAME Pf := AG (AF p1.pc=w1)
 -- <holds or not?>
+-- specification AG (AF p1.pc = w1)  is true
 
--- SPEC NAME Pg := <your answer here>
+-- 'Along all paths, all processes are in w1 at the same time infinitely often'
+SPEC NAME Pg := AG (AF p1.pc=w1 & AF p2.pc=w1)
 -- <holds or not?>
+-- specification AG (AF p1.pc = w1 & AF p2.pc = w1)  is true
 
--- SPEC NAME Ph := <your answer here>
+-- 'There exists a path, along which all processes are in w1 at the same time infinitely often'
+SPEC NAME Ph := AG (EF p1.pc=w1 & EF p2.pc=w1)
 -- <holds or not?>
+-- specification AG (EF p1.pc = w1 & EF p2.pc = w1)  is true
 
 -- Part i -----------------------------------------------------
-  
--- Brief description of your technique 
--- SPEC NAME Pi := <longest formula used in technique here (assuming 2 processes)>
 
+-- Brief description of your technique 
+
+-- To determine the minimal number of transitions necessary to bring every process into w2, 
+-- we can use the following technique based on a sequence of formulas:
+-- 1. Define the initial state where all processes are in w1 (eg. allInW1).
+-- 2. Define the target state where all processes are in w2 (eg. allInW2).
+-- 3. Define a formula that checks if there exists a path to w2 from the initial state (eg. EX allInW2). 
+--    This is used to verify if it is even possible to reach next w2 state from w1.
+-- 4. Define a formula that checks if every process is in w2 in a state reachable from the initial state 
+---   (eg. using implication '->' operator). 
+--    This is used to verify if it is possible to bring every process into w2.
+-- 4. Define a formula that checks if every process is in w2 in the next state, assuming that every process is in w1 in the current state. 
+--    (eg. AG (allInW1 -> EX allInW2))
+--    This is used to find the minimal number of transitions necessary to bring every process into w2.
+-- 5. Assuming a program with only two threads, the longest formula in the sequence would be the LTL formula defined in step 4, 
+--    as it involves checking the next state of every process. So we would have to repeat the EX to check for existance of a next state that holds.
+SPEC NAME Pi := AG (allInW1 -> EX EX EX EX EX EX EX EX EX EX EX EX EX EX EX EX EX EX EX EX allInW2);
+-- specification AG (allInW1 -> EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX (EX allInW2))))))))))))))))))))  is true
+-- The longest formula in the sequence you used is 20 next steps executions, excluding the initial state.
